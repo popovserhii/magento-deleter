@@ -129,6 +129,7 @@ SQL;
     }
 
     /**
+     * @link http://stackoverflow.com/a/35711673/1335142
      * Delete all permanent redirects
      */
     protected function rewritePermanentDelete()
@@ -151,6 +152,7 @@ SQL;
     }
 
     /**
+     * @link https://www.sonassi.com/blog/magento-kb/mass-delete-products-in-magento
      * @todo Implement parse filter. Not tested.
      */
     protected function byFilterDelete()
