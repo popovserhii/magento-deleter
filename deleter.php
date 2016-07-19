@@ -60,7 +60,7 @@ USAGE;
     {
         $this->disabledDelete();
         $this->noImageDelete();
-        $this->rewritePermanentDelete();
+        $this->rewriteDelete();
     }
 
     /**
@@ -128,6 +128,22 @@ SQL;
         return $bool;
     }
 
+    protected function rewriteDelete()
+    {
+        $write = Mage::getSingleton('core/resource')->getConnection('core_write');
+        try {
+            $table = Mage::getSingleton('core/resource')->getTableName('core/url_rewrite');
+            $count = $write->exec('TRUNCATE TABLE ' . $table);
+            $message = 'Successfully removed redirects.';
+        } catch(Exception $e) {
+            $message = "An error occurred while clearing url redirects: " . $e->getMessage();
+        }
+
+        echo $message . "\r\n";
+
+        return (bool) $count;
+    }
+
     /**
      * @link http://stackoverflow.com/a/35711673/1335142
      * Delete all permanent redirects
@@ -140,10 +156,12 @@ SQL;
             $table = Mage::getSingleton('core/resource')->getTableName('core/url_rewrite');
             $count = $write->exec('DELETE FROM ' . $table . ' WHERE options IS NOT NULL AND is_system = 0');
             $write->commit();
-            $message = $this->__('Successfully removed %s redirects.', $count);
+            //$message = $this->__('Successfully removed %s redirects.', $count);
+            $message = 'Successfully removed redirects.';
         } catch(Exception $e) {
             $write->rollback();
-            $message = $this->__("An error occurred while clearing url redirects: %s", $e->getMessage());
+            //$message = $this->__("An error occurred while clearing url redirects: %s", $e->getMessage());
+            $message = "An error occurred while clearing url redirects: " . $e->getMessage();
         }
 
         echo $message . "\r\n";
