@@ -4,7 +4,7 @@
  *
  * @category Agere
  * @package Agere_Shell
- * @author Sergiy Popov <popov@agere.com.ua>
+ * @author Popov Sergiy <popov@agere.com.ua>
  * @datetime: 22.12.15 12:20
  */
 require_once 'abstract.php';
@@ -36,8 +36,8 @@ Usage:  php deleter.php -- [options]
   --delete <type>            Available types:
                                 - disabled - delete disabled products
                                 - noImage - delete products without image
-                                - rewrite - delete all rewrite
                                 - rewritePermanent - delete all permanent rewrite
+                                - #rewrite - delete all rewrite
                                 - all - include all prev types
 
   --filter <attrName:magentoCondition:attrValue>
