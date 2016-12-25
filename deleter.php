@@ -4,7 +4,7 @@
  *
  * @category Agere
  * @package Agere_Shell
- * @author Popov Sergiy <popov@agere.com.ua>
+ * @author Sergiy Popov <popov@agere.com.ua>
  * @datetime: 22.12.15 12:20
  */
 require_once 'abstract.php';
@@ -15,13 +15,11 @@ class Mage_Shell_Deleter extends Mage_Shell_Abstract
     {
         /** Magento Import/Export Profiles */
         if ($deleteType = $this->getArg('delete')) {
-            //$deleter = Agere_Magmi_Import_Factory::create($deleteType);
-            //$deleter->run();
             if (method_exists($this, $method = $deleteType . 'Delete')) {
                 $this->{$method}();
             }
         } elseif ($filterType = $this->getArg('filter')) {
-            die('Filter usage not implemented yet...');
+            $this->byFilterDelete();
         } else {
             echo $this->usageHelp();
         }
@@ -100,10 +98,6 @@ SQL;
         //$connectionRead = Mage::getSingleton('core/resource')->getConnection('core_read');
         $connectionWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
 
-        //$attribute = $connectionRead->query(
-        //    "SELECT `attribute_id` FROM `eav_attribute` WHERE `attribute_code` = 'status'"
-        //)->fetch();
-
         $sql = <<<SQL
 -- here you set every one as DISABLED (id 2)
 UPDATE catalog_product_entity_int SET value = 2
@@ -170,38 +164,70 @@ SQL;
     }
 
     /**
+     * Delete product by attribute
      * @link https://www.sonassi.com/blog/magento-kb/mass-delete-products-in-magento
-     * @todo Implement parse filter. Not tested.
      */
     protected function byFilterDelete()
     {
         Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
-        $products = Mage::getModel('catalog/product')->getCollection()->addFieldToFilter('data_set', 1544);
+        $products = Mage::getModel('catalog/product')->getCollection();
+
+        if (!$this->applyFilters($products)) {
+            echo 'Cannot parse any filter. Please, check correct spelling.' . "\r\n";
+
+            return;
+        }
+
         $sql = "";
         $undoSql = "";
-
         for ($i = 0; $i <= 8; $i++) {
-            $sql.= "UPDATE index_process SET mode = 'manual' WHERE index_process.process_id =$i LIMIT 1;";
-            $undoSql.= "UPDATE index_process SET mode = 'real_time' WHERE index_process.process_id =$i LIMIT 1;";
+            $sql .= "UPDATE index_process SET mode = 'manual' WHERE index_process.process_id ={$i} LIMIT 1;";
+            $undoSql .= "UPDATE index_process SET mode = 'real_time' WHERE index_process.process_id ={$i} LIMIT 1;";
         }
 
         $mysqli = Mage::getSingleton('core/resource')->getConnection('core_write');
         $mysqli->query($sql);
-        $total_products = count($products);
+        $totalProducts = count($products);
         $count = 0;
         $time = 0;
         foreach($products as $product) {
             $product->delete();
             if ($count++ % 100 == 0) {
-                $cur = strtotime(date("d/m/y h:i:s")) - $time;
-                $time = strtotime(date("d/m/y h:i:s"));
-                echo round((($count / $total_products) * 100) , 2) . "% deleted ($count/$total_products) " . round(100 / $cur) . " p/s " . date("h:i:s") . "rn";
+                $cur = strtotime(date('d/m/y h:i:s')) - $time;
+                $time = strtotime(date('d/m/y h:i:s'));
+                echo round((($count / $totalProducts) * 100), 2) . "% deleted ({$count}/{$totalProducts}) " . round(100 / $cur) . ' p/s ' . date('H:i:s') . "\r\n";
                 flush();
             }
         }
 
-        echo "Ended " . date("d/m/y h:i:s") . "\r\n";
+        echo 'Ended ' . date('d/m/Y H:i:s') . "\r\n";
         $mysqli->query($undoSql);
+    }
+
+    protected function applyFilters($collection)
+    {
+        $filters = explode(';', $this->getArg('filter'));
+
+        $hasFilters = false;
+        foreach ($filters as $filter) {
+            $parts = explode(':', $filter);
+            if (3 === count($parts)) {
+                $hasFilters = true;
+
+                $attributeName = $parts[0];
+                $condition = $parts[1];
+                $value = ($condition == 'in') ? explode(',', $parts[2]) : $parts[2];
+                if (in_array($value, array('true', 'false'))) {
+                    $value = ($value === 'true') ? true : false;
+                }
+
+                $collection->addAttributeToFilter($attributeName, array($condition => $value));
+                // ->addFieldToFilter('attribute_set_id', $attributeSetId);
+                // ->addAttributeToFilter('status', array('eq' =>1))
+            }
+        }
+
+        return $hasFilters;
     }
 }
 
