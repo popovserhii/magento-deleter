@@ -1,0 +1,21 @@
+{
+    "name": "popov/magento-deleter",
+    "type": "magento-module",
+    "license":"MIT Licence",
+    "description":"Delete redundant information for lightweight development",
+    "authors":[{
+        "name":"Serhii Popov",
+        "email":"popov@agere.com.ua"
+    }],
+    "repositories": [
+      {
+        "type": "git",
+        "url": "https://github.com/popovsergiy/magento-deleter.git"
+      }
+    ],
+    "extra": {
+        "map": [
+          ["shell/deleter.php", "shell/deleter.php"]
+        ]
+    }
+}
