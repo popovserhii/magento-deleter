@@ -7,7 +7,9 @@
  * @author Popov Sergiy <popov@agere.com.ua>
  * @datetime: 22.12.15 12:20
  */
-require_once 'abstract.php';
+$rootPath = realpath($file = './');
+
+require_once $rootPath . '/shell/abstract.php';
 
 class Mage_Shell_Deleter extends Mage_Shell_Abstract
 {
@@ -47,7 +49,7 @@ Usage:  php deleter.php -- [options]
                             Example:
                                 sku:neq:test-product
                                 sku:nlike:err-prod%
-                                id:in:1,4,98
+                                entity_id:in:1,4,98
                                 description:null:true
                             Available any set of filter demarcated by semicolon (;)
 
